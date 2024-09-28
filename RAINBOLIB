@@ -7,7 +7,7 @@ local HttpService = game:GetService("HttpService")
 
 local OrionLib = {
     Elements = {},
-    ThemeObjects = {},
+    ThemeObjects = {}, -- Store elements and their properties for theming
     Connections = {},
     Flags = {},
     Themes = {
@@ -27,7 +27,7 @@ local OrionLib = {
 
 -- Function to add a custom RGB theme
 function OrionLib:AddRGBTheme(name, mainRGB, secondRGB, strokeRGB, dividerRGB, textRGB, textDarkRGB)
-    OrionLib.Themes[name] = {
+    self.Themes[name] = {
         Main = Color3.fromRGB(mainRGB[1], mainRGB[2], mainRGB[3]),
         Second = Color3.fromRGB(secondRGB[1], secondRGB[2], secondRGB[3]),
         Stroke = Color3.fromRGB(strokeRGB[1], strokeRGB[2], strokeRGB[3]),
@@ -47,23 +47,47 @@ OrionLib:AddRGBTheme("CustomRGBTheme",
     {200, 200, 200}   -- TextDark Color (light gray)
 )
 
+-- Function to register UI elements for theming
+function OrionLib:RegisterElement(element, property)
+    table.insert(self.ThemeObjects, {
+        Element = element,
+        Property = property
+    })
+end
+
 -- To switch to the new theme
 OrionLib.SelectedTheme = "CustomRGBTheme"
 
 -- Example function to apply the selected theme
 function OrionLib:ApplyTheme()
     local theme = self.Themes[self.SelectedTheme]
+    if not theme then return end -- Safety check if the theme exists
+    
+    -- Apply theme to each registered UI element
     for _, object in pairs(self.ThemeObjects) do
-        if object.Property == "BackgroundColor3" then
-            object.Element.BackgroundColor3 = theme.Main
-        elseif object.Property == "TextColor3" then
-            object.Element.TextColor3 = theme.Text
+        local element = object.Element
+        local property = object.Property
+        if property == "BackgroundColor3" then
+            element.BackgroundColor3 = theme.Main
+        elseif property == "TextColor3" then
+            element.TextColor3 = theme.Text
+        elseif property == "BorderColor3" then
+            element.BorderColor3 = theme.Stroke
         end
-        -- Add other property-theme mappings as needed
     end
 end
 
--- Call ApplyTheme after switching themes
+-- Example of creating a frame and registering it
+local exampleFrame = Instance.new("Frame")
+exampleFrame.Size = UDim2.new(0, 200, 0, 100)
+exampleFrame.Position = UDim2.new(0.5, -100, 0.5, -50)
+exampleFrame.BackgroundColor3 = OrionLib.Themes[OrionLib.SelectedTheme].Main
+exampleFrame.Parent = LocalPlayer.PlayerGui -- Add to the UI (for example purposes)
+
+-- Register the frame for theming
+OrionLib:RegisterElement(exampleFrame, "BackgroundColor3")
+
+-- Apply the selected theme
 OrionLib:ApplyTheme()
 
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
